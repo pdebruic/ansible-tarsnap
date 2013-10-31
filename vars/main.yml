@@ -1,0 +1,5 @@
+---
+tarsnap_version: 1.0.35
+base_dir: /root
+install_user: root
+dirs_to_backup: home root var/www #relative to /
