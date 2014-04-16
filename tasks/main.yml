@@ -6,7 +6,7 @@
     - zlib1g-dev
     - e2fslibs-dev
     - build-essential
-    
+
 - name: Download the current tarsnap code signing key
   get_url:
     url=https://www.tarsnap.com/tarsnap-signing-key.asc
@@ -16,24 +16,24 @@
   command:
     gpg --import tarsnap-signing-key.asc
     chdir={{base_dir}}
-    
+
 - name: Download tarsnap SHA file
   get_url:
     url="https://www.tarsnap.com/download/tarsnap-sigs-{{tarsnap_version}}.asc"
     dest="{{base_dir}}/tarsnap-sigs-{{tarsnap_version}}.asc"
-    
+
 - name: Make the command that gets the current sha
   template:
     src=getSha.sh
     dest="{{base_dir}}/getSha.sh"
     mode=0755
-    
+
 - name: get the SHA256sum for this tarsnap release
   command:
     ./getSha.sh
     chdir={{base_dir}}
   register: tarsnap_sha
-  
+
 - name: Download Tarsnap source
   get_url:
     url="https://www.tarsnap.com/download/tarsnap-autoconf-{{tarsnap_version}}.tgz"
@@ -57,6 +57,12 @@
     make all install clean
     chdir="{{base_dir}}/tarsnap-autoconf-{{tarsnap_version}}"
     creates=/usr/local/bin/tarsnap
+
+- name: Delete Tarsnap source tgz
+  file: path="{{base_dir}}/tarsnap-autoconf-{{tarsnap_version}}.tgz" state=absent
+
+- name: Delete Tarsnap source directory
+  file: path="{{base_dir}}/tarsnap-autoconf-{{tarsnap_version}}" state=absent
 
 - name: Copy Tarsnap key file into place
   copy:
