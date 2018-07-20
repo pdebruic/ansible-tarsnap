@@ -74,6 +74,12 @@
     chdir="{{base_dir}}/tarsnap-autoconf-{{tarsnap_version}}"
     creates=/usr/local/bin/tarsnap
 
+- name: Delete Tarsnap source tgz
+  file: path="{{base_dir}}/tarsnap-autoconf-{{tarsnap_version}}.tgz" state=absent
+
+- name: Delete Tarsnap source directory
+  file: path="{{base_dir}}/tarsnap-autoconf-{{tarsnap_version}}" state=absent
+
 - name: Copy Tarsnap key file into place
   copy:
     src=root_tarsnap.key
