@@ -1,0 +1,62 @@
+---
+- name: Install dependencies for Tarsnap package
+  apt: pkg={{item}} state=installed update_cache=yes cache_valid_time=3600
+  with_items:
+    - ca-certificates
+    - lsb-release
+
+- name: get tarsnap package signing key
+  get_url:
+    url: https://pkg.tarsnap.com/tarsnap-deb-packaging-key.asc
+    dest: "{{base_dir}}/tarsnap-deb-packaging-key.asc"
+
+
+- name: Make the command that gets the current package key hashes
+  template:
+    src=packageKeyHashes.sh
+    dest="{{base_dir}}/packageKeyHashes.sh"
+    mode=0755
+  
+- name: store the key hashes to verify them
+  command:
+    ./packageKeyHashes.sh
+    chdir={{base_dir}}
+  register: key_hashes
+
+
+- debug:
+    var: key_hashes
+
+- name: throw an error if we cannot verify Tarsnap deb packaging key
+  command: debPackagingKeyCheckFailed
+  when: key_hashes.stdout.find("70BD6C50E82A9D99") == -1
+
+
+
+
+- name: throw an error if we cannot verify Colin Percivals key
+  command: colinPercivalKeyCheckFailed
+  when: key_hashes.stdout.find("38CECA690C6A6A6E") == -1
+
+- name: add the packaging key to apt
+  apt_key:
+    file: "{{base_dir}}/tarsnap-deb-packaging-key.asc"
+    state: present
+
+- name: copy up the apt repo creation script
+  copy:
+    src: addAptRepo.sh
+    dest: "{{base_dir}}/addAptRepo.sh"
+    mode: "0755"
+  
+    
+- name: add the tarsnap deb repo to apt
+  command:
+    ./addAptRepo.sh
+    chdir={{base_dir}}
+    
+- name: update apt & install tarsnap
+  apt:
+    name: tarsnap
+    update_cache: yes
+    
